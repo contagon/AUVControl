@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from estimation import Observer
 from plotter import Plotter
+from holoocean_config import scenario
 
 # Simulation parameters
 num_seconds = 50
@@ -16,11 +17,10 @@ observer = Observer()
 plotter = Plotter()
 
 # Load in HoloOcean info
-scenario = json.load(open("holoocean_config.json"))
 ts = 1 / scenario["ticks_per_sec"]
 num_ticks = int(num_seconds / ts)
 
-command = [5, 5, 5, 5, 0, 5, 5, 5]
+command = np.array([-.1, -.1, -.1, -.1, 4.8, 5, 5, 5])*5
 # command = np.zeros(8)
 with holoocean.make(scenario_cfg=scenario, show_viewport=view) as env:
     for i in tqdm(range(num_ticks)):
@@ -32,8 +32,6 @@ with holoocean.make(scenario_cfg=scenario, show_viewport=view) as env:
         est_state = observer.tick(state, ts)
 
         # Autopilot Commands
-        # print(state["VelocitySensor"])
-        # print(est_state.State[:3,3])
 
         # Update plots
         plotter.add_timestep(state, est_state)

@@ -1,10 +1,10 @@
-{
+scenario = {
     "name": "Hovering",
     "package_name": "Ocean",
     "world": "SimpleUnderwater",
     "main_agent": "auv0",
     "ticks_per_sec": 200,
-    "frames_per_sec": false,
+    "frames_per_sec": False,
     "agents":[
         {
             "agent_name": "auv0",
@@ -12,49 +12,60 @@
             "sensors": [
                 {
                     "sensor_type": "PoseSensor",
-                    "socket": "IMUSocket"
+                    "socket": "COM"
                 },
                 {
                     "sensor_type": "VelocitySensor",
-                    "socket": "IMUSocket"
+                    "socket": "COM"
                 },
                 {
                     "sensor_type": "IMUSensor",
-                    "socket": "IMUSocket",
+                    "socket": "COM",
                     "Hz": 200,
                     "configuration": {
                         "AccelSigma": 0.00277,
                         "AngVelSigma": 0.00123,
-                        "AccelBiasSigma": 0.00141,
-                        "AngVelBiasSigma": 0.00388,
-                        "ReturnBias": true
+                        "AccelBiasSigma": 0.0,
+                        "AngVelBiasSigma": 0.0,
+                        # "AccelBiasSigma": 0.00141,
+                        # "AngVelBiasSigma": 0.00388,
+                        "ReturnBias": True
                     }
                 },
                 {
                     "sensor_type": "GPSSensor",
-                    "socket": "IMUSocket",
-                    "Hz": 1,
+                    "socket": "COM",
+                    "Hz": 2,
                     "configuration":{
-                        "Sigma": 0.5,
+                        "Sigma": 0.3,
                         "Depth": 3,
-                        "DepthSigma": 0.25
+                        "DepthSigma": 1
+                    }
+                },
+                {
+                    "sensor_type": "OrientationSensor",
+                    "sensor_name": "CompassSensor",
+                    "socket": "COM",
+                    "Hz": 50,
+                    "configuration":{
+                        "Sigma": 0.1
                     }
                 },
                 {
                     "sensor_type": "DVLSensor",
-                    "socket": "DVLSocket",
+                    "socket": "COM",
                     "Hz": 5,
                     "configuration": {
                         "Elevation": 22.5,
                         "VelSigma": 0.02626,
-                        "ReturnRange": true,
+                        "ReturnRange": False,
                         "MaxRange": 50,
                         "RangeSigma": 0.1
                     }
                 },
                 {
                     "sensor_type": "DepthSensor",
-                    "socket": "IMUSocket",
+                    "socket": "COM",
                     "Hz": 50,
                     "configuration": {
                         "Sigma": 0.255

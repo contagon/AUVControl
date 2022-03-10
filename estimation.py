@@ -1,8 +1,38 @@
 import numpy as np
-from inekf import DVLSensor, DepthSensor, GenericMeasureModel, ProcessModel, InertialProcess
+from inekf import DVLSensor, DepthSensor, GenericMeasureModel, MeasureModel, InertialProcess
 from inekf import SE3, SO3, ERROR, InEKF
 from scipy.linalg import expm
-np.set_printoptions(suppress=True, formatter={'float_kind':f'{{:0.3f}}'.format}) 
+
+# Import parameters from scenario file
+from holoocean_config import scenario
+sensors_params = scenario["agents"][0]["sensors"]
+sensors_params = {d["sensor_type"] : d for d in sensors_params}
+sensors_params["CompassSensor"] = sensors_params["OrientationSensor"]
+np.set_printoptions(suppress=True, formatter={'float_kind':f'{{:0.2f}}'.format}) 
+
+
+class CompassSensor(MeasureModel[SE3[2,6]]):
+    def __init__(self, std):
+        super().__init__()
+
+        self.error = ERROR.RIGHT
+
+        self.M = np.eye(3)*std**2
+
+        H = np.zeros((3,15))
+        H[1,2] = -1
+        H[2,1] = 1
+        self.H = H
+
+    def processZ(self, z, state):
+        new_z = np.zeros(5)
+        new_z[:3] = z
+        return new_z
+
+    def calcV(self, z, state):
+        V = state.State[:3,:]@z - np.array([1, 0, 0])
+        return V
+        
 
 class Observer:
     def __init__(self, error=ERROR.RIGHT):
@@ -11,7 +41,7 @@ class Observer:
                         0, 0, 0,             # velocity
                         0, 0, -2,     # position
                         0,0,0,0,0,0])               # bias
-        s = np.array([0.274156, 0.274156, 0.274156, 
+        s = np.array([0.1, 0.1, 0.1, 
                         1.0, 1.0, 1.0, 
                         0.01, 0.01, 0.01, 
                         0.000025, 0.000025, 0.000025, 
@@ -22,14 +52,18 @@ class Observer:
         dvlR = SO3()
         dvlT = np.zeros(3)
         self.dvl = DVLSensor(dvlR, dvlT)
-        self.dvl.setNoise(0.0101 * 2.6, 0.005 * (3.14 / 180) * np.sqrt(200.0))
+        self.dvl.setNoise(sensors_params["DVLSensor"]["configuration"]["VelSigma"],
+                        sensors_params["IMUSensor"]["configuration"]["AngVelSigma"])
 
         # set up depth sensor
-        self.depth = DepthSensor(51.0 * (1.0 / 100) * (1.0 / 2))
+        self.depth = DepthSensor(sensors_params["DepthSensor"]["configuration"]["Sigma"])
+
+        # set up compass sensor
+        self.compass = CompassSensor(sensors_params["CompassSensor"]["configuration"]["Sigma"])
 
         # gps sensor
         b = np.array([0, 0, 0, 0, 1])
-        noise = np.eye(3) * 0.1**2
+        noise = np.eye(3) * sensors_params["GPSSensor"]["configuration"]["Sigma"]**2
         self.gps = GenericMeasureModel[SE3[2, 6]](b, noise, ERROR.LEFT)
 
         # Initialize sensors
@@ -37,11 +71,12 @@ class Observer:
         self.iekf.addMeasureModel("DVL", self.dvl)
         self.iekf.addMeasureModel("Depth", self.depth)
         self.iekf.addMeasureModel("GPS", self.gps)
+        self.iekf.addMeasureModel("Compass", self.compass)
 
-        self.iekf.pModel.setGyroNoise( .005 *  (3.14/180)  * np.sqrt(200.0) )
-        self.iekf.pModel.setAccelNoise( 20.0 * (10**-6/9.81) * np.sqrt(200.0) )
-        self.iekf.pModel.setGyroBiasNoise(0.001)
-        self.iekf.pModel.setAccelBiasNoise(0.001)
+        self.iekf.pModel.setGyroNoise( sensors_params["IMUSensor"]["configuration"]["AngVelSigma"] )
+        self.iekf.pModel.setAccelNoise( sensors_params["IMUSensor"]["configuration"]["AccelSigma"] )
+        self.iekf.pModel.setGyroBiasNoise(sensors_params["IMUSensor"]["configuration"]["AngVelBiasSigma"])
+        self.iekf.pModel.setAccelBiasNoise(sensors_params["IMUSensor"]["configuration"]["AccelBiasSigma"])
 
         self.last_omega = np.zeros(3)
 
@@ -63,6 +98,9 @@ class Observer:
         dvl = np.append(dvl, self.last_omega)
         return self.iekf.Update(dvl, "DVL")
 
+    def update_compass(self, compass):
+        return self.iekf.Update(compass, "Compass")
+
     def tick(self, state, ts):
         if "IMUSensor" in state:
             est_state = self.predict_imu(state["IMUSensor"], ts)
@@ -72,5 +110,8 @@ class Observer:
             est_state = self.update_depth(state["DepthSensor"])
         if "GPSSensor" in state:
             est_state = self.update_gps(state["GPSSensor"])
+        if "CompassSensor" in state:
+            z = np.linalg.inv(state["CompassSensor"])[:3,0] + np.random.normal(0, sensors_params["CompassSensor"]["configuration"]["Sigma"], 3)
+            est_state = self.update_compass(z)
         return est_state
 
