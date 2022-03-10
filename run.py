@@ -20,7 +20,7 @@ plotter = Plotter()
 ts = 1 / scenario["ticks_per_sec"]
 num_ticks = int(num_seconds / ts)
 
-command = np.array([-.1, -.1, -.1, -.1, 4.8, 5, 5, 5])*5
+command = np.array([-0.1, -0.1, -0.1, -0.1, 4.8, 5, 5, 5]) * 5
 # command = np.zeros(8)
 with holoocean.make(scenario_cfg=scenario, show_viewport=view) as env:
     for i in tqdm(range(num_ticks)):
