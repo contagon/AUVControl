@@ -10,7 +10,11 @@ from holoocean_config import scenario
 
 # Simulation parameters
 num_seconds = 50
-view = False
+view = True
+
+# Install simulation environments
+if "Ocean" not in holoocean.installed_packages():
+    holoocean.install("Ocean")
 
 # Set everything up
 observer = Observer()
