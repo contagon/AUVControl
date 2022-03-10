@@ -102,7 +102,6 @@ class Observer:
         self.last_omega = np.zeros(3)
 
     def predict_imu(self, imu, dt):
-        # WHICH ORDER ARE THESE IN?
         a = imu[0]
         omega = imu[1]
         u = np.append(omega, a)
@@ -137,4 +136,5 @@ class Observer:
                 0, sensors_params["CompassSensor"]["configuration"]["Sigma"], 3
             )
             est_state = self.update_compass(z)
+
         return est_state

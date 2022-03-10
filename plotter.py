@@ -27,11 +27,13 @@ class Plotter:
         self.line_est_state = [[] for _ in range(self.num_row)]
         for i in range(self.num_row):
             for j in range(self.num_col):
-                (p,) = self.ax[i, j].plot([], [], c="r")
-                (p_est,) = self.ax[i, j].plot([], [], c="g")
+                (p,) = self.ax[i, j].plot([], [], c="r", label="True State")
+                (p_est,) = self.ax[i, j].plot([], [], c="g", label="Estimated State")
 
                 self.line_state[i].append(p)
                 self.line_est_state[i].append(p_est)
+
+        self.ax[-1, 2].legend()
 
         # Add axes labels
         names = ["RPY", "Position", "Velocity", "Bias - Omega", "Bias - Acceleration"]
