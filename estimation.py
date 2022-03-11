@@ -15,7 +15,6 @@ from holoocean_config import scenario
 sensors_params = scenario["agents"][0]["sensors"]
 sensors_params = {d["sensor_type"]: d for d in sensors_params}
 sensors_params["CompassSensor"] = sensors_params["OrientationSensor"]
-np.set_printoptions(suppress=True, formatter={"float_kind": f"{{:0.2f}}".format})
 
 
 class CompassSensor(MeasureModel[SE3[2, 6]]):

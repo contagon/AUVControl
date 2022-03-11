@@ -6,7 +6,10 @@ from tqdm import tqdm
 
 from estimation import Observer
 from plotter import Plotter
+from controller import Controller
 from holoocean_config import scenario
+
+np.set_printoptions(suppress=True, formatter={"float_kind": f"{{:0.2f}}".format})
 
 # Simulation parameters
 num_seconds = 50
@@ -19,13 +22,15 @@ if "Ocean" not in holoocean.installed_packages():
 # Set everything up
 observer = Observer()
 plotter = Plotter()
+controller = Controller()
 
 # Load in HoloOcean info
 ts = 1 / scenario["ticks_per_sec"]
 num_ticks = int(num_seconds / ts)
 
-command = np.array([-0.1, -0.1, -0.1, -0.1, 4.8, 5, 5, 5]) * 5
-# command = np.zeros(8)
+F = np.array([0, 0, 10, 0, 0, 0])
+command = controller.Minv@F
+
 with holoocean.make(scenario_cfg=scenario, show_viewport=view) as env:
     for i in tqdm(range(num_ticks)):
         # Tick environment
