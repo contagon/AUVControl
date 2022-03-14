@@ -28,7 +28,6 @@ class Controller:
         for i in range(8):
             self.M[:3,i] = self.thruster_d[i]
             self.M[3:,i] = -np.cross(self.thruster_d[i], self.thruster_p[i])
-        print(self.M)
 
         self.Minv = self.M.T@np.linalg.inv(self.M@self.M.T)
         # self.Minv = np.linalg.inv(self.M.T@self.M)@self.M.T

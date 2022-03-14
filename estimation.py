@@ -49,7 +49,7 @@ class Observer:
         s = np.zeros(15)
         s[0:3] = 0.1  # rotation
         s[3:6] = 1.0  # position
-        s[6:9] = 0.01  # velocity
+        s[6:9] = 0.1  # velocity
         s[9:12] = 0.000025  # bias
         s[12:15] = 0.0025
         x0 = SE3[2, 6](xi, np.diag(s))

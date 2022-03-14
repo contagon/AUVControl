@@ -48,7 +48,7 @@ scenario = {
                     "socket": "COM",
                     "Hz": 50,
                     "configuration":{
-                        "Sigma": 0.1
+                        "Sigma": 0.05
                     }
                 },
                 {
