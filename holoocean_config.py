@@ -20,6 +20,11 @@ scenario = {
                 },
                 {
                     "sensor_type": "IMUSensor",
+                    "sensor_name": "IMUSensorClean",
+                    "socket": "COM"
+                },
+                {
+                    "sensor_type": "IMUSensor",
                     "socket": "COM",
                     "Hz": 200,
                     "configuration": {
