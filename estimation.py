@@ -7,7 +7,7 @@ from inekf import (
     InertialProcess,
 )
 from inekf import SE3, SO3, ERROR, InEKF
-from scipy.linalg import expm
+from tools import State
 
 # Import parameters from scenario file
 from holoocean_config import scenario
@@ -135,5 +135,7 @@ class Observer:
                 0, sensors_params["CompassSensor"]["configuration"]["Sigma"], 3
             )
             est_state = self.update_compass(z)
+
+        est_state = State(est_state, self.last_omega)
 
         return est_state

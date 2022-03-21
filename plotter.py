@@ -7,14 +7,14 @@ sns.set(context="paper", style="whitegrid", font_scale=0.8)
 
 
 class Plotter:
-    def __init__(self):
+    def __init__(self, names):
         # Where all the data is stored
         self.t = []
         self.data = None
-        self.est_data = None
 
         self.num_row = 5
         self.num_col = 3
+        self.num_items = len(names)
 
         # Setup figure
         plt.ion()
@@ -23,49 +23,32 @@ class Plotter:
         )
 
         # Setup all lines
-        self.line_state = [[] for _ in range(self.num_row)]
-        self.line_est_state = [[] for _ in range(self.num_row)]
+        self.lines = [[[] for _ in range(self.num_row)] for _ in range(len(names))]
         for i in range(self.num_row):
             for j in range(self.num_col):
-                (p,) = self.ax[i, j].plot([], [], c="r", label="True State")
-                (p_est,) = self.ax[i, j].plot([], [], c="g", label="Estimated State")
+                for k, n in enumerate(names):
+                    (p,) = self.ax[i, j].plot([], [], label=n)
 
-                self.line_state[i].append(p)
-                self.line_est_state[i].append(p_est)
+                    self.lines[k][i].append(p)
 
         self.ax[-1, 2].legend()
 
         # Add axes labels
-        names = ["RPY", "Position", "Velocity", "Bias - Omega", "Bias - Acceleration"]
+        titles = ["Position", "Velocity", "RPY", "Bias - Omega", "Bias - Acceleration"]
         for i in range(self.num_row):
-            self.ax[i, 1].set_title(names[i])
+            self.ax[i, 1].set_title(titles[i])
         self.fig.tight_layout()
 
-    def add_timestep(self, state, est_state):
-        self.t.append(state["t"])
+    def add_timestep(self, t, states):
+        # Keep the time
+        self.t.append(t)
 
-        # Convert true state to something easier
-        rpy = self._rot_to_rpy(state["PoseSensor"][:3, :3]) * 180 / np.pi
-        p = state["PoseSensor"][:3, 3]
-        v = state["VelocitySensor"]
-        bias = state["IMUSensor"][2:]
-        new_state = np.block([[rpy], [p], [v], [bias[1]], [bias[0]]])
-
-        # Convert estimated state to something easier
-        est_rpy = self._rot_to_rpy(est_state.State[:3, :3].copy()) * 180 / np.pi
-        est_p = est_state.State[:3, 4]
-        est_v = est_state.State[:3, 3]
-        est_bias = est_state.Aug
-        new_est_state = np.block(
-            [[est_rpy], [est_p], [est_v], [est_bias[:3]], [est_bias[3:]]]
-        )
-
+        # Plop our data at the end of the other data
+        new_state = np.stack([s.data_plot for s in states])
         if self.data is None:
             self.data = new_state
-            self.est_data = new_est_state
         else:
             self.data = np.dstack((self.data, new_state))
-            self.est_data = np.dstack((self.est_data, new_est_state))
 
     def _rot_to_rpy(self, mat):
         return Rotation.from_matrix(mat).as_euler("xyz")
@@ -74,8 +57,8 @@ class Plotter:
         # Update all lines
         for i in range(self.num_row):
             for j in range(self.num_col):
-                self.line_state[i][j].set_data(self.t, self.data[i, j])
-                self.line_est_state[i][j].set_data(self.t, self.est_data[i, j])
+                for k in range(self.num_items):
+                    self.lines[k][i][j].set_data(self.t, self.data[k,self.num_col*i+j])
 
                 self.ax[i, j].relim()
                 self.ax[i, j].autoscale_view()

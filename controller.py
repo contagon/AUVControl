@@ -81,7 +81,7 @@ class Controller:
 
         # Feedback linearization
         u_til[:3] = x.mat[:3,:3].T@u_til[:3] # rotate force to body frame
-        u_til[3:] -= np.cross(x.mat[:3,:3].T@self.cob, [0,0,1])*self.V*self.rho*self.gravity # subtract off bouyant torque
+        u_til[3:] -= np.cross([0,0,1], x.mat[:3,:3].T@self.cob)*self.V*self.rho*self.gravity # subtract off bouyant torque
 
         # Convert forces/torques to thruster commands
         f = self.Minv@u_til

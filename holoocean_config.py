@@ -3,7 +3,7 @@ scenario = {
     "package_name": "Ocean",
     "world": "SimpleUnderwater",
     "main_agent": "auv0",
-    "ticks_per_sec": 200,
+    "ticks_per_sec": 100,
     "frames_per_sec": False,
     "agents":[
         {
@@ -26,7 +26,7 @@ scenario = {
                 {
                     "sensor_type": "IMUSensor",
                     "socket": "COM",
-                    "Hz": 200,
+                    "Hz": 100,
                     "configuration": {
                         "AccelSigma": 0.00277,
                         "AngVelSigma": 0.00123,
