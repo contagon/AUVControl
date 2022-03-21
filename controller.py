@@ -76,7 +76,7 @@ class Controller:
 
     def u(self, x, x_d):
         # Compute LQR terms
-        e = x.vec - x_d
+        e = x.vec - x_d.vec
         u_til = -self.K@e
 
         # Feedback linearization
