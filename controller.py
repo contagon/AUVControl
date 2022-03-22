@@ -61,8 +61,8 @@ class Controller:
         self.Q = np.zeros(12)
         self.Q[0:3] = 100 # position
         self.Q[3:6] = 0.001 # velocity
-        self.Q[6:9] = 0.01 # rotation
-        self.Q[9:12] = 0.0001 # angular velocity
+        self.Q[6:9] = [.1, .1, .01] #0.01 # rotation
+        self.Q[9:12] = 0.01 # angular velocity
         self.Q = np.diag(self.Q)
 
         self.R = np.zeros(6)

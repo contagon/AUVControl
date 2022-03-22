@@ -32,7 +32,7 @@ def main(num_seconds, show, verbose):
     R = 3
     tau = 2
     planner = Planner(lambda t: np.array([R*np.cos(t*tau*2*np.pi/num_seconds), R*np.sin(t*tau*2*np.pi/num_seconds), -5-0.05*t]),
-                        lambda t: np.array([0*t, 8-16*t/num_seconds, 180+t*tau*360/num_seconds]))
+                        lambda t: np.array([0*t, 15-30*t/num_seconds, 170+t*tau*360/num_seconds]))
     # planner = Planner(lambda t: np.array([0.5*t, 5+0*t, -5+0*t]),
     #                     lambda t: np.array([0*t, 0*t, 3*t]))
 

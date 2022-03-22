@@ -15,8 +15,8 @@ class State:
             self.vec[6:9] = rot_to_rpy(state["PoseSensor"][:3,:3])
             self.vec[9:12] = state["IMUSensorClean"][1]
 
-            self.bias[0:3] = state["IMUSensor"][2]
-            self.bias[3:6] = state["IMUSensor"][3]
+            self.bias[0:3] = state["IMUSensor"][3]
+            self.bias[3:6] = state["IMUSensor"][2]
 
             self.mat[:3,:3] = state["PoseSensor"][:3,:3]
             self.mat[:3,3] = state["VelocitySensor"]
