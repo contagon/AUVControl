@@ -78,7 +78,7 @@ scenario = {
                 }
             ],
             "control_scheme": 0,
-            "location": [0.0, 0.0, -2.0],
+            "location": [0.0, 0.0, -5.0],
             "rotation": [0.0, 0.0, 0.0]
         }
     ],

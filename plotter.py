@@ -17,7 +17,6 @@ class Plotter:
         self.num_items = len(names)
 
         # Setup figure
-        plt.ion()
         self.fig, self.ax = plt.subplots(
             self.num_row, self.num_col, figsize=(6, 8), sharex=True
         )
@@ -38,6 +37,7 @@ class Plotter:
         for i in range(self.num_row):
             self.ax[i, 1].set_title(titles[i])
         self.fig.tight_layout()
+        plt.show(block=False)
 
     def add_timestep(self, t, states):
         # Keep the time
@@ -63,5 +63,5 @@ class Plotter:
                 self.ax[i, j].relim()
                 self.ax[i, j].autoscale_view()
 
-        # self.fig.canvas.draw()
+        self.fig.canvas.draw()
         self.fig.canvas.flush_events()

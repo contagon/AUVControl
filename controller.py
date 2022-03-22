@@ -59,9 +59,9 @@ class Controller:
         self.B[9:12,3:6] = np.linalg.inv(self.J)
 
         self.Q = np.zeros(12)
-        self.Q[0:3] = 10 # position
-        self.Q[3:6] = 0.01 # velocity
-        self.Q[6:9] = 0.001 # rotation
+        self.Q[0:3] = 100 # position
+        self.Q[3:6] = 0.001 # velocity
+        self.Q[6:9] = 0.01 # rotation
         self.Q[9:12] = 0.0001 # angular velocity
         self.Q = np.diag(self.Q)
 

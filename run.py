@@ -7,47 +7,64 @@ from tqdm import tqdm
 from estimation import Observer
 from plotter import Plotter
 from controller import Controller
+from planner import Planner
 from tools import State
 from holoocean_config import scenario
+import argparse
 
 np.set_printoptions(suppress=True, formatter={"float_kind": f"{{:0.2f}}".format})
 
-# Simulation parameters
-num_seconds = 50
-view = True
+def main(num_seconds, show, verbose):
+    # Install simulation environments
+    if "Ocean" not in holoocean.installed_packages():
+        holoocean.install("Ocean")
 
-# Install simulation environments
-if "Ocean" not in holoocean.installed_packages():
-    holoocean.install("Ocean")
+    # Load in HoloOcean info
+    ts = 1 / scenario["ticks_per_sec"]
+    num_ticks = int(num_seconds / ts)
 
-# Set everything up
-observer = Observer()
-plotter = Plotter(["True", "Estimated", "Commanded"])
-controller = Controller()
+    # Set everything up
+    observer = Observer()
+    plotter = Plotter(["True", "Estimated", "Desired"])
+    controller = Controller()
 
-# Load in HoloOcean info
-ts = 1 / scenario["ticks_per_sec"]
-num_ticks = int(num_seconds / ts)
+    # Setup trajectory
+    planner = Planner(lambda t: np.array([0.5*t, 5+0*t, -5+0*t]),
+                        lambda t: np.array([0*t, 0*t, 3*t]))
 
-u = np.zeros(8)
-x_d = State(np.array([2.0, 2, -2, 0, 0, 0, 0, 20, 45, 0, 0, 0]))
-with holoocean.make(scenario_cfg=scenario, show_viewport=view) as env:
-    for i in tqdm(range(num_ticks)):
-        # Tick environment
-        env.act("auv0", u)
-        sensors = env.tick()
+    u = np.zeros(8)
+    with holoocean.make(scenario_cfg=scenario, show_viewport=show, verbose=verbose) as env:
+        planner.draw_traj(env, num_seconds)
 
-        # Pluck true state from sensors
-        t = sensors["t"]
-        true_state = State(sensors)
+        for i in tqdm(range(num_ticks)):
+            # Tick environment
+            env.act("auv0", u)
+            sensors = env.tick()
 
-        # Estimate State
-        est_state = observer.tick(sensors, ts)
+            # Pluck true state from sensors
+            t = sensors["t"]
+            true_state = State(sensors)
 
-        # Autopilot Commands
-        u = controller.u(est_state, x_d)
+            # Estimate State
+            est_state = observer.tick(sensors, ts)
 
-        # Update plots
-        plotter.add_timestep(t, [true_state, est_state, x_d])
-        if i % 200 == 0:
-            plotter.update_plots()
+            # Path planner
+            des_state = planner.tick(t)
+
+            # Autopilot Commands
+            u = controller.u(est_state, des_state)
+
+            # Update visualization
+            plotter.add_timestep(t, [true_state, est_state, des_state])
+            if i % 100 == 0:
+                plotter.update_plots()
+                planner.draw_step(env, t)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Run AUV simulation.')
+    parser.add_argument('-s', '--show', action='store_true', help='Show viewport')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Print holoocean output')
+    parser.add_argument('-n', '--num_seconds', default=50, type=float, help='Length to run simulation for')
+
+    args = parser.parse_args()
+    main(**vars(args))
