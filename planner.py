@@ -24,11 +24,11 @@ class Planner:
 
         return State(self._traj(t))
 
-    def draw_step(self, env, t):
+    def draw_step(self, env, t, ts):
         """Draw points on the next 5 steps"""
         for i in range(5):
             des = self._traj(t+i)
-            env.draw_point(des[:3].tolist(), color=[0,255,0], thickness=50.0/(i+1), lifetime=1)
+            env.draw_point(des[:3].tolist(), color=[0,255,0], thickness=50.0/(i+1), lifetime=ts)
 
     def draw_traj(self, env, t):
         """Makes trajectory line show up"""

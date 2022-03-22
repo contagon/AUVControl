@@ -29,8 +29,12 @@ def main(num_seconds, show, verbose):
     controller = Controller()
 
     # Setup trajectory
-    planner = Planner(lambda t: np.array([0.5*t, 5+0*t, -5+0*t]),
-                        lambda t: np.array([0*t, 0*t, 3*t]))
+    R = 3
+    tau = 2
+    planner = Planner(lambda t: np.array([R*np.cos(t*tau*2*np.pi/num_seconds), R*np.sin(t*tau*2*np.pi/num_seconds), -5-0.05*t]),
+                        lambda t: np.array([0*t, 8-16*t/num_seconds, 180+t*tau*360/num_seconds]))
+    # planner = Planner(lambda t: np.array([0.5*t, 5+0*t, -5+0*t]),
+    #                     lambda t: np.array([0*t, 0*t, 3*t]))
 
     u = np.zeros(8)
     with holoocean.make(scenario_cfg=scenario, show_viewport=show, verbose=verbose) as env:
@@ -58,7 +62,8 @@ def main(num_seconds, show, verbose):
             plotter.add_timestep(t, [true_state, est_state, des_state])
             if i % 100 == 0:
                 plotter.update_plots()
-                planner.draw_step(env, t)
+            if i % 10 == 0:
+                planner.draw_step(env, t, ts*10)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run AUV simulation.')

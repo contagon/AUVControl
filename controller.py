@@ -75,6 +75,10 @@ class Controller:
 
 
     def u(self, x, x_d):
+        # wrap angles
+        for i in range(6,9):
+            x_d.vec[i] = wrap(x_d.vec[i], x.vec[i])
+
         # Compute LQR terms
         e = x.vec - x_d.vec
         u_til = -self.K@e
@@ -87,3 +91,10 @@ class Controller:
         f = self.Minv@u_til
 
         return f
+
+def wrap(chi_1, chi_2):
+    while chi_1 - chi_2 > 180:
+        chi_1 = chi_1 - 2.0 * 180
+    while chi_1 - chi_2 < -180:
+        chi_1 = chi_1 + 2.0 * 180
+    return chi_1
