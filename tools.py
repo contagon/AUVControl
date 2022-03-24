@@ -45,3 +45,49 @@ class State:
 
 def rot_to_rpy(mat):
     return Rotation.from_matrix(mat).as_euler("xyz")*180/np.pi
+
+def make_route(route, num_seconds):
+    # Setup trajectory
+    if route == "helix":
+        R = 3
+        tau = 2
+        pos = lambda t: np.array([R*np.cos(t*tau*2*np.pi/num_seconds), R*np.sin(t*tau*2*np.pi/num_seconds), -5-0.05*t])
+        rot = lambda t: np.array([0*t, 15-30*t/num_seconds, 170+t*tau*360/num_seconds])
+    
+    elif route == "wave":
+        pos = lambda t: np.array([t/2, 0*t, -2*np.cos(t*4*2*np.pi/num_seconds)-3])
+        rot = lambda t: np.array([0*t, -np.arctan(2*2*np.pi/num_seconds*np.sin(t*4*2*np.pi/num_seconds))*180/np.pi, 0*t])
+    
+    elif route == "square":
+        q = num_seconds/4
+
+        def pos(t):
+            v = 0.5
+            if t <= q:
+                return np.array([0*t, v*t, 0*t-5])
+            elif q < t and t <= 2*q:
+                t -= q
+                return np.array([0*t, 0*t + v*q, -v*t-5])
+            elif 2*q < t and t <= 3*q:
+                t -= 2*q
+                return np.array([0*t, -v*t + v*q, 0*t - v*q-5])
+            elif 3*q < t:
+                t -= 3*q
+                return np.array([0*t, 0*t, v*t - v*q-5])
+        vec_pos = np.vectorize(pos, signature='()->(n)')
+        pos = lambda t: vec_pos(t).T
+        
+
+        def rot(t):
+            if t <= q:
+                return np.array([0*t, 0*t, 0*t])
+            elif q < t and t <= 2*q:
+                return np.array([0*t, 0*t, 90+0*t])
+            elif 2*q < t and t <= 3*q:
+                return np.array([0*t, 0*t, 180+0*t])
+            elif 3*q < t:
+                return np.array([0*t, 0*t, 270+0*t])
+        vec_rot = np.vectorize(rot, signature='()->(n)')
+        rot = lambda t: vec_rot(t).T
+
+    return pos, rot

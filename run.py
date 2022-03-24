@@ -1,20 +1,18 @@
-from matplotlib.pyplot import plot
 import numpy as np
 import holoocean
-import json
 from tqdm import tqdm
 
 from estimation import Observer
 from plotter import Plotter
 from controller import Controller
 from planner import Planner
-from tools import State
+from tools import State, make_route
 from holoocean_config import scenario
 import argparse
 
 np.set_printoptions(suppress=True, formatter={"float_kind": f"{{:0.2f}}".format})
 
-def main(num_seconds, show, verbose):
+def main(num_seconds, show, plot, verbose, route):
     # Install simulation environments
     if "Ocean" not in holoocean.installed_packages():
         holoocean.install("Ocean")
@@ -25,17 +23,13 @@ def main(num_seconds, show, verbose):
 
     # Set everything up
     observer = Observer()
-    plotter = Plotter(["True", "Estimated", "Desired"])
+    if plot:
+        plotter = Plotter(["True", "Estimated", "Desired"])
     controller = Controller()
+    pos, rot = make_route(route, num_seconds)
+    planner = Planner(pos, rot)
 
-    # Setup trajectory
-    R = 3
-    tau = 2
-    planner = Planner(lambda t: np.array([R*np.cos(t*tau*2*np.pi/num_seconds), R*np.sin(t*tau*2*np.pi/num_seconds), -5-0.05*t]),
-                        lambda t: np.array([0*t, 15-30*t/num_seconds, 170+t*tau*360/num_seconds]))
-    # planner = Planner(lambda t: np.array([0.5*t, 5+0*t, -5+0*t]),
-    #                     lambda t: np.array([0*t, 0*t, 3*t]))
-
+    # Run simulation!
     u = np.zeros(8)
     with holoocean.make(scenario_cfg=scenario, show_viewport=show, verbose=verbose) as env:
         planner.draw_traj(env, num_seconds)
@@ -59,17 +53,21 @@ def main(num_seconds, show, verbose):
             u = controller.u(est_state, des_state)
 
             # Update visualization
-            plotter.add_timestep(t, [true_state, est_state, des_state])
-            if i % 100 == 0:
-                plotter.update_plots()
-            if i % 10 == 0:
-                planner.draw_step(env, t, ts*10)
+            if plot:
+                plotter.add_timestep(t, [true_state, est_state, des_state])
+                if i % 100 == 0:
+                    plotter.update_plots()
+            if show:
+                if i % 10 == 0:
+                    planner.draw_step(env, t, ts*10)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run AUV simulation.')
     parser.add_argument('-s', '--show', action='store_true', help='Show viewport')
+    parser.add_argument('-p', '--plot', action='store_true', help='Plot data')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print holoocean output')
     parser.add_argument('-n', '--num_seconds', default=50, type=float, help='Length to run simulation for')
+    parser.add_argument('-r', '--route', default="wave", type=str, help='Length to run simulation for')
 
     args = parser.parse_args()
     main(**vars(args))
