@@ -32,8 +32,8 @@ scenario = {
                         "AngVelSigma": 0.00123,
                         "AccelBiasSigma": 0.0,
                         "AngVelBiasSigma": 0.0,
-                        # "AccelBiasSigma": 0.00141,
-                        # "AngVelBiasSigma": 0.00388,
+                        "AccelBiasSigma": 0.00141,
+                        "AngVelBiasSigma": 0.00388,
                         "ReturnBias": True
                     }
                 },

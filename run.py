@@ -5,8 +5,9 @@ from tqdm import tqdm
 from estimation import Observer
 from plotter import Plotter
 from controller import Controller
-from planner import Planner
-from tools import State, make_route
+from trajectory import Traj
+from rrt import RRT
+from tools import State
 from holoocean_config import scenario
 import argparse
 
@@ -23,11 +24,13 @@ def main(num_seconds, show, plot, verbose, route):
 
     # Set everything up
     observer = Observer()
+    controller = Controller()
+    if route == "rrt":
+        planner = RRT(num_seconds)
+    else:
+        planner = Traj(route, num_seconds)
     if plot:
         plotter = Plotter(["True", "Estimated", "Desired"])
-    controller = Controller()
-    pos, rot = make_route(route, num_seconds)
-    planner = Planner(pos, rot)
 
     # Run simulation!
     u = np.zeros(8)
@@ -67,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--plot', action='store_true', help='Plot data')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print holoocean output')
     parser.add_argument('-n', '--num_seconds', default=50, type=float, help='Length to run simulation for')
-    parser.add_argument('-r', '--route', default="wave", type=str, help='Length to run simulation for')
+    parser.add_argument('-r', '--route', default="rrt", type=str, help='Length to run simulation for')
 
     args = parser.parse_args()
     main(**vars(args))
