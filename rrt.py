@@ -5,7 +5,7 @@ class RRT:
     def __init__(self, num_seconds, route='rrt', num_obstacles=100, start=None, end=None, speed=None):
         # setup goal
         self.start = np.array([0, 0, -5]) if start is None else start
-        self.end = np.array([45, 45, -20]) if end is None else end
+        self.end = np.array([40, 40, -20]) if end is None else end
         self.num_seconds = num_seconds
         self.speed = speed
         
@@ -80,10 +80,30 @@ class RRT:
         # make rot and pos functions
         distance = np.linalg.norm(np.diff(self.path, axis=0), axis=1)
         if self.speed is None:
-            self.speed = np.sum(distance) / self.num_seconds
+            self.speed = np.sum(distance) / (self.num_seconds - 3)
         times = np.cumsum(distance / self.speed)
 
-        self.rot_func = lambda t: np.array([0*t, 0*t, 0*t])
+        def rot(t):
+            step = np.searchsorted(times, t)
+
+            if step+1 >= len(self.path):
+                return np.zeros(3)
+            else:
+                t = t - times[step-1] if step > 0 else t
+
+                p_prev = self.path[step]
+                p_next = self.path[step+1]
+
+                m = self.speed * (p_next - p_prev) / np.linalg.norm(p_next - p_prev)
+
+                yaw = np.arctan2(m[1], m[0])*180/np.pi
+                pitch = -np.arctan2(m[2], np.sqrt(m[0]**2 + m[1]**2))*180/np.pi
+                pitch = np.clip(pitch, -15, 15)
+
+                return np.array([0, pitch, yaw])
+
+        vec_rot = np.vectorize(rot, signature='()->(n)')
+        self.rot_func = lambda t: vec_rot(t).T
         
         def pos(t):
             step = np.searchsorted(times, t)
