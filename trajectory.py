@@ -16,7 +16,7 @@ class Traj:
         lin_vel = (self.pos_func(t+self.eps) - pos) / self.eps
         ang_vel = (self.rot_func(t+self.eps) - rot) / self.eps
 
-        return np.concatenate((pos, lin_vel, rot, ang_vel)).T
+        return np.hstack((pos, lin_vel, rot, ang_vel))
 
     def tick(self, t):
         """Gets desired trajectory at time t"""
@@ -46,12 +46,12 @@ class Traj:
         if route == "helix":
             R = 3
             tau = 2
-            pos = lambda t: np.array([R*np.cos(t*tau*2*np.pi/num_seconds), R*np.sin(t*tau*2*np.pi/num_seconds), -5-0.05*t])
-            rot = lambda t: np.array([0*t, 15-30*t/num_seconds, 170+t*tau*360/num_seconds])
+            pos = lambda t: np.array([R*np.cos(t*tau*2*np.pi/num_seconds), R*np.sin(t*tau*2*np.pi/num_seconds), -5-0.05*t]).T
+            rot = lambda t: np.array([0*t, 15-30*t/num_seconds, 170+t*tau*360/num_seconds]).T
         
         elif route == "wave":
-            pos = lambda t: np.array([t/2, 0*t, -2*np.cos(t*4*2*np.pi/num_seconds)-3])
-            rot = lambda t: np.array([0*t, -np.arctan(2*2*np.pi/num_seconds*np.sin(t*4*2*np.pi/num_seconds))*180/np.pi, 0*t])
+            pos = lambda t: np.array([t/2, 0*t, -2*np.cos(t*4*2*np.pi/num_seconds)-3]).T
+            rot = lambda t: np.array([0*t, -np.arctan(2*2*np.pi/num_seconds*np.sin(t*4*2*np.pi/num_seconds))*180/np.pi, 0*t]).T
         
         elif route == "square":
             q = num_seconds/4
@@ -69,8 +69,7 @@ class Traj:
                 elif 3*q < t:
                     t -= 3*q
                     return np.array([0*t, 0*t, v*t - v*q-5])
-            vec_pos = np.vectorize(pos, signature='()->(n)')
-            pos = lambda t: vec_pos(t).T
+            pos = np.vectorize(pos, signature='()->(n)')
             
 
             def rot(t):
@@ -82,5 +81,6 @@ class Traj:
                     return np.array([0*t, 0*t, 180+0*t])
                 elif 3*q < t:
                     return np.array([0*t, 0*t, 270+0*t])
-            vec_rot = np.vectorize(rot, signature='()->(n)')
-            rot = lambda t: vec_rot(t).T
+            rot = np.vectorize(rot, signature='()->(n)')
+
+        return pos, rot

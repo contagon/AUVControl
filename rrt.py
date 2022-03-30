@@ -102,8 +102,7 @@ class RRT:
 
                 return np.array([0, pitch, yaw])
 
-        vec_rot = np.vectorize(rot, signature='()->(n)')
-        self.rot_func = lambda t: vec_rot(t).T
+        self.rot_func = np.vectorize(rot, signature='()->(n)')
         
         def pos(t):
             step = np.searchsorted(times, t)
@@ -119,8 +118,7 @@ class RRT:
                 m = self.speed * (p_next - p_prev) / np.linalg.norm(p_next - p_prev)
                 return m*t + p_prev
 
-        vec_pos = np.vectorize(pos, signature='()->(n)')
-        self.pos_func = lambda t: vec_pos(t).T
+        self.pos_func = np.vectorize(pos, signature='()->(n)')
 
     def _add_node(self):
         # make random pose
@@ -171,7 +169,7 @@ class RRT:
         lin_vel = (self.pos_func(t+self.eps) - pos) / self.eps
         ang_vel = (self.rot_func(t+self.eps) - rot) / self.eps
 
-        return np.concatenate((pos, lin_vel, rot, ang_vel)).T
+        return np.hstack((pos, lin_vel, rot, ang_vel))
 
     def tick(self, t):
         """Gets desired trajectory at time t"""
