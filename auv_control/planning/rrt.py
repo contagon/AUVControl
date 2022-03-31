@@ -1,8 +1,9 @@
 import numpy as np
 from auv_control import State
+from .base import BasePlanner
 
-class RRT:
-    def __init__(self, num_seconds, route='rrt', num_obstacles=100, start=None, end=None, speed=None):
+class RRT(BasePlanner):
+    def __init__(self, num_seconds, num_obstacles=100, start=None, end=None, speed=None):
         # setup goal
         self.start = np.array([0, 0, -5]) if start is None else start
         self.end = np.array([40, 40, -20]) if end is None else end
@@ -30,8 +31,6 @@ class RRT:
         self.parent = [0]
         self.finish = [False]
         self._run_rrt()
-
-        self.eps = 1e-5
 
     def _run_rrt(self):
         # Make tree till we have a connecting path
@@ -161,40 +160,9 @@ class RRT:
     def top_corner(self):
         return self.bottom_corner + self.size
 
-    def _traj(self, t):
-        """Get desired trajectory at time t"""
-        pos = self.pos_func(t)
-        rot = self.rot_func(t)
-
-        lin_vel = (self.pos_func(t+self.eps) - pos) / self.eps
-        ang_vel = (self.rot_func(t+self.eps) - rot) / self.eps
-
-        return np.hstack((pos, lin_vel, rot, ang_vel))
-
-    def tick(self, t):
-        """Gets desired trajectory at time t"""
-        if not isinstance(t, float):
-            raise ValueError("Can't tick with an array")
-
-        return State(self._traj(t))
-
-    def draw_step(self, env, t, ts):
-        """Draw points on the next steps"""
-        des = self._traj(t)
-        env.draw_point(des[:3].tolist(), color=[0,255,0], thickness=20, lifetime=ts)
-
     def draw_traj(self, env, t):
-        """Makes trajectory line show up"""
-        # Get all positions
-        t = np.arange(0, t, 0.5)
-        des_state = self._traj(t)
-        des_pos = des_state[:,0:3]
-
-        # Draw line between each
-        for i in range(len(des_pos)-1):
-            env.draw_line(des_pos[i].tolist(), des_pos[i+1].tolist(), thickness=5.0, lifetime=0.0)
-
-        # Draw environment
+        """Override super class to also make environment appear"""
+        # Setup environment
         env.draw_box(self.center.tolist(), (self.size/2).tolist(), color=[0,0,255], thickness=30, lifetime=0)
         for i in range(self.num_obstacles):
             loc = self.obstacle_loc[i].tolist()
@@ -203,3 +171,5 @@ class RRT:
 
         for p in self.path:
             env.draw_point(p.tolist(), color=[255,0,0], thickness=20, lifetime=0)
+
+        super().draw_traj(env, t)
