@@ -3,6 +3,13 @@ from scipy.spatial.transform import Rotation
 from inekf import SE3
 
 class State:
+    """A uniform representation of our state from various sources.
+
+    Can come from a dictionary (HoloOcean), SE[2,6] object (InEKF library), or from a simple
+    numpy array.     
+
+    State saved consists of position, velocity, rotation, angular velocity, and IMU bias.
+    """
     def __init__(self, state, last_meas_omega=None):
         self.vec = np.zeros(12)
         self.mat = np.eye(5)
@@ -38,6 +45,7 @@ class State:
         # Commanded State
         if isinstance(state, np.ndarray):
             self.vec = state
+            # TODO Matrix representation here too?
 
     @property
     def data_plot(self):

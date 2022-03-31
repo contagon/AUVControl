@@ -6,12 +6,12 @@ from inekf import (
     MeasureModel,
     InertialProcess,
 )
-from inekf import SE3, SO3, ERROR, InEKF
-from tools import State
+from inekf import InEKF as InvariantEKF
+from inekf import SE3, SO3, ERROR
+from auv_control import State
+from auv_control import scenario
 
 # Import parameters from scenario file
-from holoocean_config import scenario
-
 sensors_params = scenario["agents"][0]["sensors"]
 sensors_params = {d["sensor_type"]: d for d in sensors_params}
 sensors_params["CompassSensor"] = sensors_params["OrientationSensor"]
@@ -40,7 +40,7 @@ class CompassSensor(MeasureModel[SE3[2, 6]]):
         return V
 
 
-class Observer:
+class InEKF:
     def __init__(self, error=ERROR.RIGHT):
         # set up initial state
         xi = np.zeros(15)
@@ -79,7 +79,7 @@ class Observer:
         self.gps = GenericMeasureModel[SE3[2, 6]](b, noise, ERROR.LEFT)
 
         # Initialize sensors
-        self.iekf = InEKF[InertialProcess](x0, error)
+        self.iekf = InvariantEKF[InertialProcess](x0, error)
         self.iekf.addMeasureModel("DVL", self.dvl)
         self.iekf.addMeasureModel("Depth", self.depth)
         self.iekf.addMeasureModel("GPS", self.gps)

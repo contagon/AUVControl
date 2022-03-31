@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.linalg import solve_continuous_are
 
-class Controller:
+class LQR:
     def __init__(self):
         #----------- PARAMETERS OF AUV -----------#
         self.gravity = 9.81

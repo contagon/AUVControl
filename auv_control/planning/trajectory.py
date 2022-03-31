@@ -1,5 +1,5 @@
 import numpy as np
-from tools import State
+from auv_control import State
 
 class Traj:
     def __init__(self, route, num_seconds):

@@ -1,5 +1,5 @@
 import numpy as np
-from tools import State
+from auv_control import State
 
 class RRT:
     def __init__(self, num_seconds, route='rrt', num_obstacles=100, start=None, end=None, speed=None):

@@ -2,13 +2,12 @@ import numpy as np
 import holoocean
 from tqdm import tqdm
 
-from estimation import Observer
+from auv_control.estimation import InEKF
+from auv_control.control import LQR
+from auv_control.planning import Traj, RRT
+from auv_control import State
 from plotter import Plotter
-from controller import Controller
-from trajectory import Traj
-from rrt import RRT
-from tools import State
-from holoocean_config import scenario
+from auv_control import scenario
 import argparse
 
 np.set_printoptions(suppress=True, formatter={"float_kind": f"{{:0.2f}}".format})
@@ -23,8 +22,8 @@ def main(num_seconds, show, plot, verbose, route):
     num_ticks = int(num_seconds / ts)
 
     # Set everything up
-    observer = Observer()
-    controller = Controller()
+    controller = LQR()
+    observer = InEKF()
     if route == "rrt":
         planner = RRT(num_seconds)
     else:
