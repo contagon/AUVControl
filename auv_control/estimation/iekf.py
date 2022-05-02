@@ -2,7 +2,6 @@ import numpy as np
 from inekf import (
     DVLSensor,
     DepthSensor,
-    GenericMeasureModel,
     MeasureModel,
     InertialProcess,
 )
@@ -69,34 +68,36 @@ class InEKF:
         )
 
         # set up compass sensor
-        self.compass = CompassSensor(
-            sensors_params["CompassSensor"]["configuration"]["Sigma"]
-        )
+        b = np.array([1, 0, 0, 0, 0])
+        noise =  np.eye(3)*sensors_params["CompassSensor"]["configuration"]["Sigma"]**2
+        self.compass = MeasureModel[SE3[2, 6]](b, noise, ERROR.RIGHT)
 
         # gps sensor
         b = np.array([0, 0, 0, 0, 1])
         noise = np.eye(3) * sensors_params["GPSSensor"]["configuration"]["Sigma"] ** 2
-        self.gps = GenericMeasureModel[SE3[2, 6]](b, noise, ERROR.LEFT)
+        self.gps = MeasureModel[SE3[2, 6]](b, noise, ERROR.LEFT)
+
+        # Process model
+        pModel = InertialProcess()
+        pModel.setGyroNoise(
+            sensors_params["IMUSensor"]["configuration"]["AngVelSigma"]
+        )
+        pModel.setAccelNoise(
+            sensors_params["IMUSensor"]["configuration"]["AccelSigma"]
+        )
+        pModel.setGyroBiasNoise(
+            sensors_params["IMUSensor"]["configuration"]["AngVelBiasSigma"]
+        )
+        pModel.setAccelBiasNoise(
+            sensors_params["IMUSensor"]["configuration"]["AccelBiasSigma"]
+        )
 
         # Initialize sensors
-        self.iekf = InvariantEKF[InertialProcess](x0, error)
+        self.iekf = InvariantEKF(pModel, x0, error)
         self.iekf.addMeasureModel("DVL", self.dvl)
         self.iekf.addMeasureModel("Depth", self.depth)
         self.iekf.addMeasureModel("GPS", self.gps)
         self.iekf.addMeasureModel("Compass", self.compass)
-
-        self.iekf.pModel.setGyroNoise(
-            sensors_params["IMUSensor"]["configuration"]["AngVelSigma"]
-        )
-        self.iekf.pModel.setAccelNoise(
-            sensors_params["IMUSensor"]["configuration"]["AccelSigma"]
-        )
-        self.iekf.pModel.setGyroBiasNoise(
-            sensors_params["IMUSensor"]["configuration"]["AngVelBiasSigma"]
-        )
-        self.iekf.pModel.setAccelBiasNoise(
-            sensors_params["IMUSensor"]["configuration"]["AccelBiasSigma"]
-        )
 
         self.last_omega = np.zeros(3)
 
@@ -105,20 +106,20 @@ class InEKF:
         omega = imu[1]
         u = np.append(omega, a)
         self.last_omega = omega
-        return self.iekf.Predict(u, dt)
+        return self.iekf.predict(u, dt)
 
     def update_gps(self, gps):
-        return self.iekf.Update(gps, "GPS")
+        return self.iekf.update("GPS", gps)
 
     def update_depth(self, depth):
-        return self.iekf.Update(depth, "Depth")
+        return self.iekf.update("Depth", depth)
 
     def update_dvl(self, dvl):
         dvl = np.append(dvl, self.last_omega)
-        return self.iekf.Update(dvl, "DVL")
+        return self.iekf.update("DVL", dvl)
 
     def update_compass(self, compass):
-        return self.iekf.Update(compass, "Compass")
+        return self.iekf.update("Compass", compass)
 
     def tick(self, state, ts):
         if "IMUSensor" in state:

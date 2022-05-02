@@ -33,14 +33,14 @@ class State:
         if isinstance(state, SE3[2,6]):
             self.vec[0:3] = state[1]
             self.vec[3:6] = state[0]
-            self.vec[6:9] = rot_to_rpy(state.State[:3,:3].copy())
+            self.vec[6:9] = rot_to_rpy(state.mat[:3,:3].copy())
 
             if last_meas_omega is None:
                 raise ValueError("Need a measurement for angular velocity")
-            self.vec[9:12] = last_meas_omega - state.Aug[:3]
+            self.vec[9:12] = last_meas_omega - state.aug[:3]
 
-            self.bias = state.Aug
-            self.mat = state.State
+            self.bias = state.aug
+            self.mat = state.mat
 
         # Commanded State
         if isinstance(state, np.ndarray):
