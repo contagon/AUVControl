@@ -69,7 +69,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--plot', action='store_true', help='Plot data')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print holoocean output')
     parser.add_argument('-n', '--num_seconds', default=100, type=float, help='Length to run simulation for')
-    parser.add_argument('-r', '--route', default="rrt", type=str, help='Length to run simulation for')
+    parser.add_argument('-r', '--route', default="rrt", type=str, help='Routing to use (e.g., "rrt", "helix", "wave", "square")')
 
     args = parser.parse_args()
     main(**vars(args))
