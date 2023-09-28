@@ -50,4 +50,7 @@ class Traj(BasePlanner):
                     return np.array([0*t, 0*t, 270+0*t])
             rot = np.vectorize(rot, signature='()->(n)')
 
+        else:
+            raise NotImplementedError(f"Route {route} not implemented")
+        
         return pos, rot
